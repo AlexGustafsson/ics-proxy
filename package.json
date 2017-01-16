@@ -1,0 +1,19 @@
+{
+  "name": "ics-proxy",
+  "version": "1.0.0",
+  "description": "An iCalendar proxy to modify data from a source and mirror it",
+  "main": "server.js",
+  "scripts": {
+    "test": "DEBUG=server,rewriter node test.js",
+    "start": "DEBUG=server,rewriter node server.js"
+  },
+  "author": "Alex Gustafsson (https://github.com/AlexGustafsson)",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "axios": "^0.15.3",
+    "csvtojson": "^1.0.0",
+    "debug": "^2.6.0",
+    "express": "^4.14.0",
+    "icalendar": "^0.7.1"
+  }
+}
