@@ -5,17 +5,18 @@ Ics-proxy is a service that rewrites the otherwise non-legible Time Edit schedul
 
 Live<sup>1</sup> over at: https://ics-proxy-mprdxfhwyk.now.sh
 
-#### Before:
-<center>![Before](https://github.com/AlexGustafsson/ics-proxy/raw/master/assets/before.png)</center>
+[before]: https://github.com/AlexGustafsson/ics-proxy/raw/master/assets/before.png "Before"
 
-#### After:
-<center>![After](https://github.com/AlexGustafsson/ics-proxy/raw/master/assets/after.png)</center>
+[after]: https://github.com/AlexGustafsson/ics-proxy/raw/master/assets/after.png "After"
 
-#### Before:
-<center>![Before](https://github.com/AlexGustafsson/ics-proxy/raw/master/assets/before-detail.png)</center>
+[before-detail]: https://github.com/AlexGustafsson/ics-proxy/raw/master/assets/before-detail.png "Before detail"
 
-#### After:
-<center>![After](https://github.com/AlexGustafsson/ics-proxy/raw/master/assets/after-detail.png)</center>
+[after-detail]: https://github.com/AlexGustafsson/ics-proxy/raw/master/assets/after-detail.png "After detail"
+
+| Before        | After       |
+| ------------- |-------------|
+| ![Before][before] | ![After][after] |
+| ![Before detail][before-detail] | ![After detail][after-detail] |
 
 # Quickstart
 <a name="quickstart"></a>
