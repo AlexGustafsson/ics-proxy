@@ -180,19 +180,31 @@ function finalizeEvents(options){
       options.sortedEvents[i].properties.SUMMARY[0].value = (type ? type + ": " : "") + course;
     options.sortedEvents[i].properties.DESCRIPTION[0].value = (person ? "Lärare: " + person + "\n" : "") + (course ? "Kurs: " + course + "\n" : "") + (info ? "Info: " + info : "") + (text ? "Text:" + text : "");
 
-   //Hard coded rewrites to opt out non-participating courses
-   if (course && (course.indexOf("DV1497") != -1)) {
-      if (text && text.indexOf("Svart") != -1)
-        options.ics.components.VEVENT.push(options.sortedEvents[i]);
-    } else if (course && (course.indexOf("SV1406") != -1)) {
+    const groupRegex = /gr\.?([0-9]+)/gi;
+
+    //Hard coded rewrites to opt out non-participating courses
+    if (course && course.includes("DV1490")) {
+      if (text && text.includes("DVACD16")) {
+        const group = text.match(groupRegex);
+        if(!group)
+          options.ics.components.VEVENT.push(options.sortedEvents[i]);
+        else if (group[0].includes("1"))
+          options.ics.components.VEVENT.push(options.sortedEvents[i]);
+      }
+    } else if (course && course.includes("SV1406")) {
+      if (text && text.includes("DVACD16")) {
+        const group = text.match(groupRegex);
+        if(!group)
+          options.ics.components.VEVENT.push(options.sortedEvents[i]);
+        else if (group[0].includes("5"))
+          options.ics.components.VEVENT.push(options.sortedEvents[i]);
+      }
+    } else if (type && type.includes("Gruppövning")) {
       if (text && text.indexOf("DVACD16") != -1)
         options.ics.components.VEVENT.push(options.sortedEvents[i]);
-    } else if (type && type.indexOf("Gruppövning") != -1) {
-      if (text && text.indexOf("DVACD16") != -1)
-        options.ics.components.VEVENT.push(options.sortedEvents[i]);
-    } else if (text && text.indexOf("räknestuga") != -1){
-        options.sortedEvents[i].properties.SUMMARY[0].value = "Räknestuga";
-        options.ics.components.VEVENT.push(options.sortedEvents[i]);
+    } else if (text && text.includes("räknestuga")){
+      options.sortedEvents[i].properties.SUMMARY[0].value = "Räknestuga";
+      options.ics.components.VEVENT.push(options.sortedEvents[i]);
     } else {
       options.ics.components.VEVENT.push(options.sortedEvents[i]);
     }

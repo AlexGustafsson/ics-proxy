@@ -12,7 +12,7 @@ const {
   finalizeEvents,
 } = require("./methods.js");
 
-const url = "https://se.timeedit.net/web/bth/db1/sched1/ri69nQXQX62Z9ZQ5Y9601755y2Z98Y7YQ729X12Q9673055Y.ics";
+const url = "https://se.timeedit.net/web/bth/db1/sched1/ri627Q90X89ZY1Q5Yn807203yXZ55Y7QQ6Z9771Q9.ics";
 
 //TODO: execute actual tests here
 
