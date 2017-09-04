@@ -2,7 +2,7 @@ const axios = require("axios"),
       URL   = require("url"),
       debug = require("debug")("rewriter"),
       ical  = require("icalendar"),
-      csv   = require("csvtojson").Converter;
+      csv   = require("csvtojson");
 
 function fetch(url){
   return new Promise((resolve, reject) => {
@@ -43,12 +43,15 @@ function parseICS(options){
 function parseCSV(options){
   debug("parsing csv");
   return new Promise((resolve, reject) => {
-    new csv({}).fromString(options.csv, (error, result) => {
-      if(error)
-        return reject(error);
+    let parsed = [];
+    csv({noheader:true}).fromString(options.csv)
+    .on('json', result => {
+      parsed.push(result);
+    })
+    .on('done', () => {
       //Remove first element - it contains no usable information
-      result.shift();
-      resolve(Object.assign(options, {csv: result}));
+      parsed.shift();
+      resolve(Object.assign(options, {csv: parsed}));
     });
   });
 }
