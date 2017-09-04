@@ -57,13 +57,28 @@ function parseCSV(options){
 }
 
 function getCourseCodes(options){
-  //First element contains a field (field1) with course codes delimited by ", "
-  //Ex: MA1446, Analys 2, MA1448 Linjär Algebra 1
-  let values = options.csv.shift()["field1"].split(", ");
+  //First element contains a field (field1) with course codes and matching description
+  //Ex: "MA1446, Analys 2, MA1448 Linjär Algebra 1"
+  let stringValues = options.csv.shift()["field1"];
   let courseCodes = {};
-  //Values occur after each other, ex: values[0]:values[1]
-  for(let i = 0; i < values.length - 1; i += 2)
-    courseCodes[values[i]] = values[i + 1];
+  
+  while (stringValues.length > 0) {
+    // Course codes are always 6 in length. /[A-Z]{2}[0-9]{4}/
+    let courseCode = stringValues.substr(0, 6);
+    // Course code is followed by ', '
+    stringValues = stringValues.slice(6 + 2);
+    let nextMatch = /([A-Z]{2}[0-9]{4})/.exec(stringValues);
+    // If there are more course codes to be followed
+    if (nextMatch != null) {
+      // Course description is followed by ', ' - remove from description
+      let courseDescription = stringValues.substr(0, nextMatch.index - 2);
+      stringValues = stringValues.slice(nextMatch.index);
+      courseCodes[courseCode] = courseDescription;
+    } else {
+      courseCodes[courseCode] = stringValues;
+      stringValues = "";
+    }
+  }
 
   return Promise.resolve(Object.assign(options, {courseCodes: courseCodes}));
 }
