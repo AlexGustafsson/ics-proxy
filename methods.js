@@ -183,22 +183,12 @@ function finalizeEvents(options){
     const groupRegex = /gr\.?([0-9]+)/gi;
 
     //Hard coded rewrites to opt out non-participating courses
-    if (course && course.includes("DV1490")) {
-      if (text && text.includes("DVACD16")) {
-        const group = text.match(groupRegex);
-        if(!group)
-          options.ics.components.VEVENT.push(options.sortedEvents[i]);
-        else if (group[0].includes("1"))
-          options.ics.components.VEVENT.push(options.sortedEvents[i]);
-      }
-    } else if (course && course.includes("SV1406")) {
-      if (text && text.includes("DVACD16")) {
-        const group = text.match(groupRegex);
-        if(!group)
-          options.ics.components.VEVENT.push(options.sortedEvents[i]);
-        else if (group[0].includes("5"))
-          options.ics.components.VEVENT.push(options.sortedEvents[i]);
-      }
+    if (course && course.includes("FY1420")) {
+      if (text && text.includes("DVACD16"))
+        options.ics.components.VEVENT.push(options.sortedEvents[i]);
+    } else if (course && course.includes("MA1446")) {
+      if (text && text.includes("DVACD16"))
+        options.ics.components.VEVENT.push(options.sortedEvents[i]);
     } else if (type && type.includes("Gruppövning")) {
       if (text && text.indexOf("DVACD16") != -1)
         options.ics.components.VEVENT.push(options.sortedEvents[i]);
