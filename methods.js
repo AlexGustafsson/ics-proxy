@@ -1,9 +1,12 @@
 const URL = require('url');
+const crypto = require('crypto');
 
 const axios = require('axios');
 const debug = require('debug')('rewriter');
-const ical = require('icalendar');
+const ICS = require('ics');
 const csv = require('csvtojson');
+
+const ics = new ICS();
 
 function fetch(url) {
   return new Promise((resolve, reject) => {
@@ -19,16 +22,6 @@ function fetch(url) {
   });
 }
 
-function fetchICS(options) {
-  debug('fetching ics');
-
-  return new Promise((resolve, reject) => {
-    fetch(options.url.href).then(data => {
-      resolve(Object.assign(options, {ics: data}));
-    }).catch(reject);
-  });
-}
-
 function fetchCSV(options) {
   debug('fetching csv');
 
@@ -37,12 +30,6 @@ function fetchCSV(options) {
       resolve(Object.assign(options, {csv: data}));
     }).catch(reject);
   });
-}
-
-function parseICS(options) {
-  debug('parsing ics');
-
-  return Promise.resolve(Object.assign(options, {ics: ical.parse_calendar(options.ics)}));
 }
 
 function parseCSV(options) {
@@ -136,17 +123,19 @@ function getEvents(options) {
   const {rules, csv} = options;
 
   const events = csv.reduce((result, event) => {
+    const course = event[rules.course];
     result.push({
-      start: new Date(event[rules.startDate] + 'T' + event[rules.startTime] + ':00'),
-      stop: new Date(event[rules.stopDate] + 'T' + event[rules.stopTime] + ':00'),
+      start: event[rules.startDate] + 'T' + event[rules.startTime] + ':00',
+      stop: event[rules.stopDate] + 'T' + event[rules.stopTime] + ':00',
 
-      course: event[rules.course],
+      course: options.courseCodes[course] || course,
+      courseCode: event[rules.course],
 
       person: event[rules.person],
 
       room: event[rules.room],
 
-      type: event[rules.type],
+      type: event[rules.type] || '',
 
       text: event[rules.text],
 
@@ -158,72 +147,106 @@ function getEvents(options) {
   return Promise.resolve(Object.assign(options, {events}));
 }
 
-// Events available in the ics and csv formats are not aligned
-function sortEvents(options) {
-  debug('sorting events');
+function filterEvents(options) {
+  debug('filtering events');
 
-  // Sort ical events by time, ascending
-  const sortedEvents = options.ics.components.VEVENT.sort((a, b) => {
-    return new Date(a.properties.DTSTART[0].value) - new Date(b.properties.DTSTART[0].value);
+  const filteredEvents = options.events.filter(event => {
+    if (event.courseCode === 'FY1420')
+      return event.text.includes('DVACD16');
+    else if (event.courseCode === 'MA1446')
+      return event.text.includes('DVACD16');
+    else if (event.type === 'Gruppövning')
+      return event.text.includes('DVACD16');
+
+    return true;
   });
 
-  // Sort csv events by time, ascending
-  options.events = options.events.sort((a, b) => {
-    return a.start - b.start;
-  });
+  return Promise.resolve(Object.assign(options, {events: filteredEvents}));
+}
 
-  return Promise.resolve(Object.assign(options, {sortedEvents}));
+function formatTitle(event) {
+  let formattedTitle = `${event.type}: ${event.course}`;
+
+  if (event.text && event.text.includes('räknestuga'))
+    formattedTitle = 'Räknestuga';
+
+  return formattedTitle;
+}
+
+function formatDescription(event) {
+  const teacherString = event.person ? `Lärare: ${event.person}\\n` : '';
+  const courseString = event.course ? `Kurs: ${event.course}\\n` : '';
+  const infoString = event.info ? `Info: ${event.info}\\n` : '';
+  const textString = event.text ? `Text: ${event.text}` : '';
+
+  return (teacherString + courseString + infoString + textString).trim();
+}
+
+function hash(event) {
+  // Make the hash (id) depend on the start and end date and the location
+  const digest = crypto.createHash('md5').update(event.start + event.stop + event.room).digest('hex');
+  return digest;
+}
+
+function formatEvent(event) {
+  // Course is not available - debug
+  if (!event.course) {
+    Promise.reject(new Error(`Course is not available: ${JSON.stringify(event, null, 2)}`));
+    return null;
+  }
+
+  const formattedEvent = {
+    uid: hash(event),
+    start: event.start,
+    end: event.stop,
+    title: formatTitle(event),
+    description: formatDescription(event),
+    location: event.room,
+    url: null,
+    status: null,
+    categories: [event.course, event.type],
+    alarms: []
+  };
+
+  // Remind the user one day before and 30 minutes before a laboration
+  if (event.type === 'Laboration') {
+    formattedEvent.alarms.push({action: 'DISPLAY', trigger: '-PT24H'});
+    formattedEvent.alarms.push({action: 'DISPLAY', trigger: '-PT30M'});
+  }
+
+  return formattedEvent;
+}
+
+function finalizeEvent(event) {
+  const formattedEvent = formatEvent(event);
+  let eventString = ics.buildEvent(formattedEvent);
+  const lines = eventString.split('\n');
+  lines.splice(0, 4);
+  lines.splice(-1);
+  eventString = lines.join('\n');
+
+  // Return final rendered event
+  return eventString;
 }
 
 function finalizeEvents(options) {
-  debug('finalizing events');
+  const finalizedEvents = options.events.map(finalizeEvent);
 
-  // Remove all ical events before rewriting and adding them again
-  options.ics.components.VEVENT = [];
+  const head =
+`BEGIN:VCALENDAR
+VERSION:2.0
+METHOD:PUBLISH
+X-WR-CALNAME:${options.school}
+X-WR-CALDESC:Kalender för ${options.school}
+X-PUBLISHED-TTL:PT20M
+CALSCALE:GREGORIAN
+PRODID:-//TimeEdit via Alex Gustafsson//TimeEdit - ICS-Proxy//EN\n`;
 
-  for (let i = 0; i < options.sortedEvents.length; i++) {
-    const {
-      course,
-      type,
-      person,
-      info,
-      text
-    } = options.events[i];
+  const tail = `\nEND:VCALENDAR`;
 
-    // Course is not available - debug
-    if (!course)
-      return Promise.reject(new Error(`Course is not available: ${JSON.stringify(options.event[i], null, 2)}`));
+  const renderedEvents = head + finalizedEvents.join('\n') + tail;
 
-    // Try to rewrite the course code using the mapped codes in options.codes
-    const expression = new RegExp(Object.keys(options.courseCodes).join('|'), 'g');
-    const courseCode = course.match(expression);
-
-    if (courseCode)
-      options.sortedEvents[i].properties.SUMMARY[0].value = (type ? type + ': ' : '') + (options.courseCodes[courseCode[0]] || course);
-    else
-      options.sortedEvents[i].properties.SUMMARY[0].value = (type ? type + ': ' : '') + course;
-    options.sortedEvents[i].properties.DESCRIPTION[0].value = (person ? 'Lärare: ' + person + '\n' : '') + (course ? 'Kurs: ' + course + '\n' : '') + (info ? 'Info: ' + info : '') + (text ? 'Text:' + text : '');
-
-    // Hard coded rewrites to opt out non-participating courses
-    if (course && course.includes('FY1420')) {
-      if (text && text.includes('DVACD16'))
-        options.ics.components.VEVENT.push(options.sortedEvents[i]);
-    } else if (course && course.includes('MA1446')) {
-      if (text && text.includes('DVACD16'))
-        options.ics.components.VEVENT.push(options.sortedEvents[i]);
-    } else if (type && type.includes('Gruppövning')) {
-      if (text && text.indexOf('DVACD16') !== -1)
-        options.ics.components.VEVENT.push(options.sortedEvents[i]);
-    } else if (text && text.includes('räknestuga')) {
-      options.sortedEvents[i].properties.SUMMARY[0].value = 'Räknestuga';
-      options.ics.components.VEVENT.push(options.sortedEvents[i]);
-    } else {
-      options.ics.components.VEVENT.push(options.sortedEvents[i]);
-    }
-  }
-
-  // Return final rendered ical
-  return Promise.resolve(options.ics.toString());
+  return Promise.resolve(renderedEvents);
 }
 
 function parseURL(options) {
@@ -253,13 +276,16 @@ function checkURL(options) {
 module.exports = {
   parseURL,
   checkURL,
-  fetchICS,
-  parseICS,
   fetchCSV,
   parseCSV,
   getCourseCodes,
   getRules,
   getEvents,
-  sortEvents,
+  filterEvents,
+  formatTitle,
+  formatDescription,
+  hash,
+  formatEvent,
+  finalizeEvent,
   finalizeEvents
 };

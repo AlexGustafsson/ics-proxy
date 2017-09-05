@@ -4,16 +4,14 @@ const express = require('express');
 const app = express();
 
 const {
-  checkURL,
   parseURL,
-  fetchICS,
-  parseICS,
+  checkURL,
   fetchCSV,
   parseCSV,
   getCourseCodes,
   getRules,
   getEvents,
-  sortEvents,
+  filterEvents,
   finalizeEvents
 } = require('./methods.js');
 
@@ -35,16 +33,16 @@ app.get('*', (req, res) => {
   if (req.url.indexOf('/') === 0)
     req.url = req.url.substr(1);
 
-  parseURL({url: req.url})
+  const school = req.url.split('/')[4];
+
+  parseURL({url: req.url, school})
   .then(checkURL)
-  .then(fetchICS)
-  .then(parseICS)
   .then(fetchCSV)
   .then(parseCSV)
   .then(getCourseCodes)
   .then(getRules)
   .then(getEvents)
-  .then(sortEvents)
+  .then(filterEvents)
   .then(finalizeEvents)
   .then(ical => {
     debug('handling result');

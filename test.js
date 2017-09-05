@@ -1,14 +1,12 @@
 const {
   parseURL,
   checkURL,
-  fetchICS,
-  parseICS,
   fetchCSV,
   parseCSV,
   getCourseCodes,
   getRules,
   getEvents,
-  sortEvents,
+  filterEvents,
   finalizeEvents
 } = require('./methods.js');
 
@@ -16,15 +14,13 @@ const url = 'https://se.timeedit.net/web/bth/db1/sched1/ri614Q9XX51ZY1Q5388939Q4
 
 // TODO: execute actual tests here
 
-parseURL({url})
+parseURL({url, school: url.split('/')[4]})
 .then(checkURL)
-.then(fetchICS)
-.then(parseICS)
 .then(fetchCSV)
 .then(parseCSV)
 .then(getCourseCodes)
 .then(getRules)
 .then(getEvents)
-.then(sortEvents)
+.then(filterEvents)
 .then(finalizeEvents)
 .catch(error => console.log(error));
