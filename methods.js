@@ -128,7 +128,8 @@ function getEvents(options) {
       start: event[rules.startDate] + 'T' + event[rules.startTime] + ':00',
       stop: event[rules.stopDate] + 'T' + event[rules.stopTime] + ':00',
 
-      course: options.courseCodes[course] || course,
+      // Course foramt: CODE. Description, extract only code
+      course: options.courseCodes[course.split('.')[0]] || course,
       courseCode: event[rules.course],
 
       person: event[rules.person],

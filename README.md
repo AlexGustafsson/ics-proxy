@@ -3,7 +3,7 @@ Ics-proxy - make your Time Edit schedule more personal
 
 Ics-proxy is a service that rewrites the otherwise non-legible Time Edit schedules whilst still keeping the ability to automatically update the schedules via subscription.
 
-Live<sup>1</sup> over at: https://ics-proxy-pzzyoonoil.now.sh
+Live<sup>1</sup> over at: https://ics-proxy-jimcdrrcqq.now.sh
 
 [before]: https://github.com/AlexGustafsson/ics-proxy/raw/master/assets/before.png "Before"
 
