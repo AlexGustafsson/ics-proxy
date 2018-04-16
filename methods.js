@@ -152,14 +152,9 @@ function filterEvents(options) {
   debug('filtering events');
 
   const filteredEvents = options.events.filter(event => {
-    if (event.courseCode === 'FY1420')
-      return event.text.includes('DVACD16');
-    else if (event.courseCode === 'MA1446')
-      return event.text.includes('DVACD16');
-    else if (event.type === 'Gruppövning')
-      return event.text.includes('DVACD16');
-
-    return true;
+    if (event.text.match(/Gr\.[0-9]/))
+      return event.text.includes('DVACD16') && event.text.includes('Gr.1');
+    return event.text.includes('DVACD16');
   });
 
   return Promise.resolve(Object.assign(options, {events: filteredEvents}));
