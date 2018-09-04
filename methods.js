@@ -152,8 +152,6 @@ function filterEvents(options) {
   debug('filtering events');
 
   const filteredEvents = options.events.filter(event => {
-    if (event.text.match(/Gr\.[0-9]/))
-      return event.text.includes('DVACD16') && event.text.includes('Gr.1');
     return event.text.includes('DVACD16');
   });
 
