@@ -152,14 +152,17 @@ function filterEvents(options) {
   debug('filtering events');
 
   const filteredEvents = options.events.filter(event => {
-    return event.text.includes('DVACD16');
+    if (event.type === 'Gruppövning')
+      return event.text.includes('DVACD16');
+    return true;
   });
 
   return Promise.resolve(Object.assign(options, {events: filteredEvents}));
 }
 
 function formatTitle(event) {
-  let formattedTitle = `${event.type}: ${event.course}`;
+  const type = event.type === '' ? 'Föreläsning' : event.type;
+  let formattedTitle = `${type}: ${event.course}`;
 
   if (event.text && event.text.includes('räknestuga'))
     formattedTitle = 'Räknestuga';
