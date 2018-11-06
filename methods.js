@@ -124,13 +124,14 @@ function getEvents(options) {
 
   const events = csv.reduce((result, event) => {
     const course = event[rules.course];
+
     result.push({
       start: event[rules.startDate] + 'T' + event[rules.startTime] + ':00',
       stop: event[rules.stopDate] + 'T' + event[rules.stopTime] + ':00',
 
       // Course foramt: CODE. Description, extract only code
       course: options.courseCodes[course.split('.')[0]] || course,
-      courseCode: event[rules.course],
+      courseCode: event[rules.course].split('.')[0],
 
       person: event[rules.person],
 
@@ -152,8 +153,11 @@ function filterEvents(options) {
   debug('filtering events');
 
   const filteredEvents = options.events.filter(event => {
-    if (event.type === 'Gruppövning')
+    if (event.type === 'Gruppövning' || event.type === 'Laboration') {
+      if (event.courseCode === 'FY1423')
+        return event.text.includes('Gr.2');
       return event.text.includes('DVACD16');
+    }
     return true;
   });
 
@@ -172,7 +176,7 @@ function formatTitle(event) {
 
 function formatDescription(event) {
   const teacherString = event.person ? `Lärare: ${event.person}\\n` : '';
-  const courseString = event.course ? `Kurs: ${event.course}\\n` : '';
+  const courseString = event.course ? `Kurs: ${event.course} (${event.courseCode})\\n` : '';
   const infoString = event.info ? `Info: ${event.info}\\n` : '';
   const textString = event.text ? `Text: ${event.text}` : '';
 
