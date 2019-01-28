@@ -36,24 +36,24 @@ app.get('*', (req, res) => {
   const school = req.url.split('/')[4];
 
   parseURL({url: req.url, school})
-  .then(checkURL)
-  .then(fetchCSV)
-  .then(parseCSV)
-  .then(getCourseCodes)
-  .then(getRules)
-  .then(getEvents)
-  .then(filterEvents)
-  .then(finalizeEvents)
-  .then(ical => {
-    debug('handling result');
-    res.set('content-type', 'text/calendar; charset=UTF-8');
-    res.set('content-disposition', 'attachment; filename="Schema"');
-    res.send(ical);
+    .then(checkURL)
+    .then(fetchCSV)
+    .then(parseCSV)
+    .then(getCourseCodes)
+    .then(getRules)
+    .then(getEvents)
+    .then(filterEvents)
+    .then(finalizeEvents)
+    .then(ical => {
+      debug('handling result');
+      res.set('content-type', 'text/calendar; charset=UTF-8');
+      res.set('content-disposition', 'attachment; filename="Schema"');
+      res.send(ical);
 
-    // Log school name
-    debug(`served schedule for: ${req.url.split('/')[4]}`);
-  })
-  .catch(error => res.status(500).send(error));
+      // Log school name
+      debug(`served schedule for: ${req.url.split('/')[3]}`);
+    })
+    .catch(error => res.status(500).send(error));
 });
 
 app.listen(3000, () => {
